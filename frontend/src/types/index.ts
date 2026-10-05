@@ -102,6 +102,28 @@ export interface IssueBookPayload {
 }
 
 /**
+ * Request payload for creating a new book (POST /api/books).
+ */
+export interface CreateBookPayload {
+  title: string;
+  author: string;
+  ISBN: string;
+  genre: string;
+  totalCopies: number;
+  availableCopies: number;
+}
+
+/**
+ * Request payload for registering a new member (POST /api/members).
+ */
+export interface CreateMemberPayload {
+  name: string;
+  email: string;
+  membership: string;
+  joinedDate?: string;
+}
+
+/**
  * Generic API success response envelope.
  */
 export interface ApiResponse<T> {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { apiClient, ShelfLifeApiError } from '../api/api';
 import type { Book, BorrowRecord } from '../types';
-import { MOCK_MEMBERS } from '../mocks/members';
+import { getActiveMembers } from '../mocks/members';
 
 /**
  * Issue Book Page Component
@@ -24,12 +24,14 @@ export const IssueBook: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const membersList = getActiveMembers();
+
   // If redirected from Books page with a preselected book ID
   const preselectedBookId = (location.state as { selectedBookId?: string })?.selectedBookId || '';
 
   // Form Fields State
   const [selectedBookId, setSelectedBookId] = useState<string>(preselectedBookId);
-  const [selectedMemberId, setSelectedMemberId] = useState<string>(MOCK_MEMBERS[0]?._id || '');
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(membersList[0]?._id || '');
 
   // Calculate default due date: 14 days from today in YYYY-MM-DD format
   const defaultDueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
@@ -134,7 +136,7 @@ export const IssueBook: React.FC = () => {
   };
 
   const selectedBook = availableBooks.find((b) => b._id === selectedBookId);
-  const selectedMember = MOCK_MEMBERS.find((m) => m._id === selectedMemberId);
+  const selectedMember = membersList.find((m) => m._id === selectedMemberId);
 
   return (
     <div className="page-container">
@@ -220,7 +222,7 @@ export const IssueBook: React.FC = () => {
                 disabled={submitting}
                 required
               >
-                {MOCK_MEMBERS.map((m) => (
+                {membersList.map((m) => (
                   <option key={m._id} value={m._id}>
                     {m.name} ({m.membership} - {m.email})
                   </option>

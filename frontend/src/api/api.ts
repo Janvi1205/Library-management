@@ -1,9 +1,12 @@
 import type {
+  Book,
   Member,
   BorrowRecord,
   LoginPayload,
   LoginResponse,
   IssueBookPayload,
+  CreateBookPayload,
+  CreateMemberPayload,
   ApiResponse,
   PaginatedBooksResponse,
   MemberHistoryResponse,
@@ -13,9 +16,10 @@ import type {
 
 /**
  * Base URL for ShelfLife backend API.
- * Configurable via Vite environment variable VITE_API_URL, defaulting to http://localhost:5000.
+ * Configurable via Vite environment variable VITE_API_URL (e.g. deployed on Render / Vercel).
  */
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const rawBaseUrl = import.meta.env.VITE_API_URL || '';
+const BASE_URL = rawBaseUrl.replace(/\/$/, '');
 
 const TOKEN_KEY = 'shelflife_jwt_token';
 const LIBRARIAN_KEY = 'shelflife_librarian_user';
@@ -178,13 +182,32 @@ export const apiClient = {
   },
 
   /**
-   * Register a new member (supporting utility)
+   * Add / Create a New Book
+   * POST /api/books
+   */
+  async createBook(payload: CreateBookPayload): Promise<ApiResponse<Book>> {
+    return request<ApiResponse<Book>>('/api/books', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /**
+   * Register / Create a New Member
    * POST /api/members
    */
-  async registerMember(payload: { name: string; email: string; membership: string }): Promise<ApiResponse<Member>> {
+  async createMember(payload: CreateMemberPayload): Promise<ApiResponse<Member>> {
     return request<ApiResponse<Member>>('/api/members', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  },
+
+  /**
+   * Alias for backward compatibility
+   * POST /api/members
+   */
+  async registerMember(payload: CreateMemberPayload): Promise<ApiResponse<Member>> {
+    return this.createMember(payload);
   },
 };

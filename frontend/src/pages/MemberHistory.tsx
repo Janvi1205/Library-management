@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiClient, ShelfLifeApiError } from '../api/api';
 import type { BorrowRecord, Member } from '../types';
 import { OverdueBadge } from '../components/OverdueBadge';
-import { MOCK_MEMBERS } from '../mocks/members';
+import { getActiveMembers } from '../mocks/members';
 
 /**
  * Member History Page Component
@@ -25,8 +25,10 @@ export const MemberHistory: React.FC = () => {
   const { id: paramMemberId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Selected member ID (defaults to first mock member if invalid or empty)
-  const currentMemberId = paramMemberId || MOCK_MEMBERS[0]._id;
+  const membersList = getActiveMembers();
+
+  // Selected member ID (defaults to first member if invalid or empty)
+  const currentMemberId = paramMemberId || membersList[0]?._id || '';
 
   const [member, setMember] = useState<Member | null>(null);
   const [history, setHistory] = useState<BorrowRecord[]>([]);
@@ -114,7 +116,7 @@ export const MemberHistory: React.FC = () => {
             value={currentMemberId}
             onChange={(e) => navigate(`/members/${e.target.value}/history`)}
           >
-            {MOCK_MEMBERS.map((m) => (
+            {membersList.map((m) => (
               <option key={m._id} value={m._id}>
                 {m.name} ({m.membership})
               </option>

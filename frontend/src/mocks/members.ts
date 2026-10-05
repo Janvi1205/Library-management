@@ -48,3 +48,34 @@ export const MOCK_MEMBERS: Member[] = [
     joinedDate: '2026-09-10T00:00:00.000Z',
   },
 ];
+
+const STORAGE_KEY = 'shelflife_registered_members';
+
+/**
+ * Retrieves members including dynamically registered members from the session
+ */
+export const getActiveMembers = (): Member[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return MOCK_MEMBERS;
+    const customMembers: Member[] = JSON.parse(stored);
+    const existingIds = new Set(customMembers.map((m) => m._id));
+    return [...customMembers, ...MOCK_MEMBERS.filter((m) => !existingIds.has(m._id))];
+  } catch {
+    return MOCK_MEMBERS;
+  }
+};
+
+/**
+ * Stores newly registered member locally so they are accessible across Member Directory and Issue Book
+ */
+export const saveRegisteredMember = (newMember: Member): void => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const customMembers: Member[] = stored ? JSON.parse(stored) : [];
+    const updated = [newMember, ...customMembers.filter((m) => m._id !== newMember._id)];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore local storage quota errors
+  }
+};

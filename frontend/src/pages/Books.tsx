@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient, ShelfLifeApiError } from '../api/api';
 import type { Book, Member } from '../types';
 import { DataTable, type ColumnDef } from '../components/DataTable';
-import { MOCK_MEMBERS } from '../mocks/members';
+import { getActiveMembers } from '../mocks/members';
+import { AddBookModal } from '../components/AddBookModal';
+import { AddMemberModal } from '../components/AddMemberModal';
 
 /**
  * Available book genres for dropdown filtering.
@@ -32,6 +34,11 @@ const KNOWN_GENRES = [
  * 8. Clear error state with retry action
  * 9. Pagination controls (page, totalPages, limit)
  *
+ * New Features:
+ * 10. "+ Add New Book" modal dialog with automatic availableCopies = totalCopies
+ * 11. "+ Add New Member" modal dialog for registering members in Member Directory
+ * 12. Success feedback banners and live catalog / directory refresh
+ *
  * Also implements Q2(e) Generic Reusable Component demonstration:
  * Uses <DataTable<Book>> for books and <DataTable<Member>> for the library members directory.
  */
@@ -55,6 +62,24 @@ export const Books: React.FC = () => {
 
   // View mode tab: Catalog (Book) vs Members Directory (Member)
   const [activeTab, setActiveTab] = useState<'catalog' | 'members'>('catalog');
+
+  // Registered members state (initialized from persistent/mock registry)
+  const [members, setMembers] = useState<Member[]>(getActiveMembers());
+
+  // Modal Dialog states
+  const [isAddBookOpen, setIsAddBookOpen] = useState<boolean>(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState<boolean>(false);
+
+  // Toast feedback message
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Auto-dismiss toast notification after 5 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   /**
    * Fetch books from backend API with pagination and optional genre query
@@ -89,6 +114,23 @@ export const Books: React.FC = () => {
   useEffect(() => {
     loadBooks();
   }, [loadBooks]);
+
+  /**
+   * Callback when a new book is created via AddBookModal
+   */
+  const handleBookCreated = (newBook: Book) => {
+    setToastMessage(`Book "${newBook.title}" added successfully to catalog!`);
+    // Refresh catalog from backend to update counts and list
+    loadBooks();
+  };
+
+  /**
+   * Callback when a new member is created via AddMemberModal
+   */
+  const handleMemberCreated = (newMember: Member) => {
+    setToastMessage(`Member "${newMember.name}" registered successfully!`);
+    setMembers((prev) => [newMember, ...prev.filter((m) => m._id !== newMember._id)]);
+  };
 
   /**
    * Filter books by Title on the client side in real-time.
@@ -201,30 +243,87 @@ export const Books: React.FC = () => {
 
   return (
     <div className="page-container">
+      {/* Top Page Header */}
       <div className="page-header">
         <div>
           <h1 className="page-title">Library Catalog Management</h1>
           <p className="page-subtitle">Search, filter, and review real-time book inventory</p>
         </div>
 
-        {/* Tab switch demonstrating generic DataTable usage across models */}
-        <div className="tab-pill-group">
-          <button
-            type="button"
-            className={`tab-pill ${activeTab === 'catalog' ? 'active' : ''}`}
-            onClick={() => setActiveTab('catalog')}
-          >
-            📖 Book Catalog
-          </button>
-          <button
-            type="button"
-            className={`tab-pill ${activeTab === 'members' ? 'active' : ''}`}
-            onClick={() => setActiveTab('members')}
-          >
-            👥 Member Directory
-          </button>
+        {/* Tab switch and Prominent Action Buttons */}
+        <div className="header-actions-group">
+          <div className="tab-pill-group">
+            <button
+              type="button"
+              className={`tab-pill ${activeTab === 'catalog' ? 'active' : ''}`}
+              onClick={() => setActiveTab('catalog')}
+            >
+              📖 Book Catalog
+            </button>
+            <button
+              type="button"
+              className={`tab-pill ${activeTab === 'members' ? 'active' : ''}`}
+              onClick={() => setActiveTab('members')}
+            >
+              👥 Member Directory
+            </button>
+          </div>
+
+          {/* Prominent + Add New Book button on Book Catalog */}
+          {activeTab === 'catalog' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setIsAddBookOpen(true)}
+            >
+              + Add New Book
+            </button>
+          )}
+
+          {/* Prominent + Add New Member button on Member Directory */}
+          {activeTab === 'members' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setIsAddMemberOpen(true)}
+            >
+              + Add New Member
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Success Toast Notification */}
+      {toastMessage && (
+        <div className="toast-banner" role="status">
+          <div className="toast-content">
+            <span>✅</span>
+            <span>{toastMessage}</span>
+          </div>
+          <button
+            type="button"
+            className="toast-close-btn"
+            onClick={() => setToastMessage(null)}
+            aria-label="Dismiss notification"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Add New Book Modal */}
+      <AddBookModal
+        isOpen={isAddBookOpen}
+        onClose={() => setIsAddBookOpen(false)}
+        onBookCreated={handleBookCreated}
+      />
+
+      {/* Add New Member Modal */}
+      <AddMemberModal
+        isOpen={isAddMemberOpen}
+        onClose={() => setIsAddMemberOpen(false)}
+        onMemberCreated={handleMemberCreated}
+      />
 
       {activeTab === 'catalog' ? (
         <>
@@ -335,6 +434,22 @@ export const Books: React.FC = () => {
       ) : (
         /* Member Directory View: Reusing generic DataTable with <DataTable<Member>> */
         <div className="members-directory-panel">
+          <div className="member-directory-header">
+            <div>
+              <h3>Registered Members Directory</h3>
+              <p className="text-muted text-sm">
+                Manage registered students, faculty, researchers, and campus staff
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => setIsAddMemberOpen(true)}
+            >
+              + Add New Member
+            </button>
+          </div>
+
           <div className="info-banner">
             <span>
               ℹ️ <strong>Demonstrating Generic &lt;DataTable&lt;Member&gt;&gt; Component:</strong> This table reuses the exact same generic table component to render library members.
@@ -342,7 +457,7 @@ export const Books: React.FC = () => {
           </div>
 
           <DataTable<Member>
-            data={MOCK_MEMBERS}
+            data={members}
             columns={memberColumns}
             keyExtractor={(m) => m._id}
             emptyMessage="No registered members found."
