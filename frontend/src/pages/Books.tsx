@@ -96,9 +96,10 @@ export const Books: React.FC = () => {
         genre: genreParam,
       });
 
-      setBooks(response.data);
-      setTotalPages(response.totalPages);
-      setTotalBooks(response.totalBooks);
+      const bookList = Array.isArray(response?.data) ? response.data : [];
+      setBooks(bookList);
+      setTotalPages(response?.totalPages || 1);
+      setTotalBooks(response?.totalBooks || bookList.length);
     } catch (err: unknown) {
       if (err instanceof ShelfLifeApiError) {
         setError(err.message);
@@ -137,11 +138,12 @@ export const Books: React.FC = () => {
    * Enables seamless live search by title while preserving backend genre and pagination.
    */
   const displayedBooks = useMemo(() => {
+    const list = Array.isArray(books) ? books : [];
     if (!searchTitle.trim()) {
-      return books;
+      return list;
     }
     const query = searchTitle.toLowerCase().trim();
-    return books.filter((b) => b.title.toLowerCase().includes(query));
+    return list.filter((b) => b && b.title && b.title.toLowerCase().includes(query));
   }, [books, searchTitle]);
 
   // ============================================================
@@ -388,13 +390,13 @@ export const Books: React.FC = () => {
             <>
               <div className="catalog-meta">
                 <span>
-                  Showing <strong>{displayedBooks.length}</strong> of <strong>{totalBooks}</strong> books
+                  Showing <strong>{displayedBooks?.length || 0}</strong> of <strong>{totalBooks || 0}</strong> books
                   {selectedGenre !== 'All Genres' && ` in genre "${selectedGenre}"`}
                 </span>
               </div>
 
               <DataTable<Book>
-                data={displayedBooks}
+                data={displayedBooks || []}
                 columns={bookColumns}
                 keyExtractor={(book) => book._id}
                 emptyMessage={

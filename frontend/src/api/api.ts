@@ -98,9 +98,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   try {
     const res = await fetch(url, config);
+
+    // Verify response is JSON (guards against HTML single-page fallbacks)
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new ShelfLifeApiError(
+        'Server returned a non-JSON response. Please verify that the backend API server is running and VITE_API_URL is configured.',
+        res.status
+      );
+    }
+
     const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
+    if (!res.ok || (data && (data as ApiError).success === false)) {
       const errorData = data as ApiError;
       const message = errorData.message || `Request failed with HTTP status ${res.status}`;
       throw new ShelfLifeApiError(message, res.status, errorData.errors);
