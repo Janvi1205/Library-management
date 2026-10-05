@@ -1,0 +1,82 @@
+# ============================================================
+# ShelfLife - Git Ignore Configuration
+# Prevents sensitive credentials, dependencies, and build
+# artifacts from being committed to GitHub.
+# ============================================================
+
+# 1. Dependency Directories
+node_modules/
+*/node_modules/
+web_modules/
+
+# 2. Sensitive Environment & Configuration Files
+# NEVER commit real credentials, JWT secrets, or DB connection strings
+.env
+.env.*
+!.env.example
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# 3. Production & Build Outputs
+dist/
+*/dist/
+build/
+*/build/
+out/
+.next/
+.output/
+
+# 4. Logs & Runtime Files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+mongod.log
+
+# 5. Local Database Files & Temporary Data
+data/
+mongodata/
+scratch/
+*.sqlite
+*.sqlite3
+*.db
+
+# 6. Testing & Coverage Reports
+coverage/
+*/coverage/
+.nyc_output/
+
+# 7. IDE & Operating System Files
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Visual Studio Code & JetBrains Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 8. Vite & Temporary Cache Directories
+.vite/
+*/.vite/
+.cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo

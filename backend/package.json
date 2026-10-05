@@ -1,0 +1,30 @@
+{
+  "name": "shelflife-backend",
+  "version": "1.0.0",
+  "description": "ShelfLife - College/University Library Management System Backend",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test/api.test.js"
+  },
+  "keywords": [
+    "library-management",
+    "express",
+    "mongodb",
+    "mongoose",
+    "jwt",
+    "joi"
+  ],
+  "author": "ShelfLife Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.4"
+  }
+}
